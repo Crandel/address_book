@@ -1,7 +1,16 @@
+def check_if_list(obj):
+    if not isinstance(obj, list):
+        obj = [obj]
+    return obj
+
+
 class AddressBook():
     '''
     Address book with persons and groups
     '''
+    persons = {}
+    groups = {}
+
     def __init__(self, *args, **kwargs):
         '''
         Args:
@@ -9,8 +18,12 @@ class AddressBook():
                                                                          or list of persons
             groups (`list` of obj:`Group` or obj:`Group` , optional): Single group or list of groups
         '''
-        self.persons = {id(p): p for p in list(kwargs.get('persons', []))}
-        self.groups = {g.name: g for g in list(kwargs.get('groups', []))}
+        persons = kwargs.get('persons')
+        if persons:
+            self.persons = {id(p): p for p in check_if_list(persons)}
+        groups = kwargs.get('groups')
+        if groups:
+            self.groups = {g.name: g for g in check_if_list(groups)}
 
     def add_person(self, person):
         '''
@@ -46,7 +59,7 @@ class AddressBook():
         Returns:
             gen of obj:`Group`: Generator of `Group` for success, None otherwise.
         '''
-        return (g for g in self.groups.values() if g.persons(id(person)))
+        return (g for g in self.groups.values() if g.persons.get(id(person)))
 
     def find_person_by_name(self, name):
         '''
@@ -57,6 +70,15 @@ class AddressBook():
         '''
         return (p for p in self.persons.values() if p.check_name(name))
 
+    def find_person_by_email(self, email):
+        '''
+        Args:
+            name (str): Person first name, last name or both.
+        Returns:
+            gen of obj:`Person`: Generator of `Person` for success, Empty generator otherwise.
+        '''
+        return (p for p in self.persons.values() if p.check_email(email))
+
     def __str__(self):
         return 'Number of persons: %(p)d; Number of groups: %(g)d' % {'p': len(self.persons), 'g': len(self.groups)}
 
@@ -65,6 +87,10 @@ class Person():
     '''
     Implement Person contact info for Address Book
     '''
+    streets = []
+    emails = []
+    phones = []
+
     def __init__(self, first_name, last_name, *args, **kwargs):
         '''
         Args:
@@ -76,9 +102,15 @@ class Person():
         '''
         self.first_name = first_name
         self.last_name = last_name
-        self.streets = list(kwargs.get('streets', []))
-        self.emails = list(kwargs.get('emails', []))
-        self.phone = list(kwargs.get('phones', []))
+        streets = kwargs.get('streets')
+        if streets:
+            self.streets = check_if_list(streets)
+        emails = kwargs.get('emails')
+        if emails:
+            self.emails = check_if_list(emails)
+        phones = kwargs.get('phones')
+        if phones:
+            self.phone = check_if_list(phones)
 
     def check_name(self, name):
         '''
@@ -87,11 +119,22 @@ class Person():
         Returns:
             bool: True for success, False otherwise.
         '''
-        name_tuple = (self.first_name, self.last_name, ' '.join(self.first_name, self.last_name))
+        name_tuple = (self.first_name, self.last_name, ' '.join([self.first_name, self.last_name]))
         for n in name_tuple:
             if n.startswith(name):
                 return True
         return False
+
+    def check_email(self, email):
+        '''
+        Args:
+            email (str): Person email.
+        Returns:
+            bool: True for success, False otherwise.
+        '''
+        for e in self.emails:
+            if e.startswith(email):
+                return True
 
     def __str__(self):
         return 'Person %s %s' % (self.first_name, self.last_name)
@@ -101,6 +144,8 @@ class Group():
     '''
     Implement group of persons
     '''
+    persons = {}
+
     def __init__(self, name, **kwargs):
         '''
         Args:
@@ -108,7 +153,9 @@ class Group():
             persons (`list` of obj:`Person` or obj:`Person`, optional): Single person or list of persons
         '''
         self.name = name
-        self.persons = {id(p): p for p in list(kwargs.get('persons', []))}
+        persons = kwargs.get('persons')
+        if persons:
+            self.persons = {id(p): p for p in check_if_list(persons)}
 
     def __str__(self):
         return 'Group %s with %d persons' % (self.name, len(self.persons))
