@@ -35,12 +35,12 @@ class AddressBookTestCase(unittest.TestCase):
     def test_get_belongs_groups(self):
         groups_from_address = self.address_book.get_belongs_groups(self.person1)
         for group in groups_from_address:
-            self.assertTrue(id(self.person1) in group.persons)
+            self.assertTrue(id(self.person1) in group.persons.keys())
 
     def test_get_persons_from_group(self):
         person_from_group = self.address_book.get_persons_from_group(self.group2)
         for person in person_from_group:
-            self.assertTrue(person.first_name in ['p3fn', 'p1fn'])
+            self.assertTrue(id(person) in self.address_book.persons.keys())
 
     def test_find_person_by_name(self):
         persons = self.address_book.find_person_by_name('p1fn')
